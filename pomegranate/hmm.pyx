@@ -1212,7 +1212,7 @@ cdef class HiddenMarkovModel(GraphModel):
         if n is None:
             return self._sample(length, path, random_state)
         else:
-            return [self.sample(length=length, path=path, random_state=i) 
+            return [self.sample(length=length, path=path, random_state=i)
                 for i in random_state.randint(10000000, size=n)]
 
 
@@ -1964,7 +1964,7 @@ cdef class HiddenMarkovModel(GraphModel):
         free(e)
         free(b)
         free(f)
-        
+
         return expected_transitions_ndarray, emission_weights_ndarray
 
     cpdef tuple viterbi(self, sequence):
@@ -2651,9 +2651,6 @@ cdef class HiddenMarkovModel(GraphModel):
                 if n_seen_batches >= len(starts):
                     n_seen_batches = 0
 
-                if iteration >= max_iterations + 1:
-                    break
-
                 if semisupervised:
                     log_probability_sum = sum(parallel(delayed(self.summarize,
                         check_pickle=False)(X_labeled[start:end],
@@ -2678,36 +2675,39 @@ cdef class HiddenMarkovModel(GraphModel):
 
                 if iteration == 0:
                     initial_log_probability_sum = log_probability_sum
-                else:
-                    epoch_end_time = time.time()
-                    time_spent = epoch_end_time - epoch_start_time
 
-                    if not minibatching:
-                        improvement = log_probability_sum - last_log_probability_sum
+                epoch_end_time = time.time()
+                time_spent = epoch_end_time - epoch_start_time
 
-                    if verbose:
-                        print("[{}] Improvement: {}\tTime (s): {:.4}".format(
-                            iteration, improvement, time_spent))
+                if not minibatching:
+                    improvement = log_probability_sum - last_log_probability_sum
 
-                    total_improvement += improvement
+                if verbose:
+                    print("[{}] Improvement: {}\tTime (s): {:.4}".format(
+                        iteration, improvement, time_spent))
 
-                    logs = {'learning_rate': step_size,
-                            'n_seen_batches' : n_seen_batches,
-                            'epoch' : iteration,
-                            'improvement' : improvement,
-                            'total_improvement' : total_improvement,
-                            'log_probability' : log_probability_sum,
-                            'last_log_probability' : last_log_probability_sum,
-                            'initial_log_probability' : initial_log_probability_sum,
-                            'epoch_start_time' : epoch_start_time,
-                            'epoch_end_time' : epoch_end_time,
-                            'duration' : time_spent }
+                total_improvement += improvement
 
-                    for callback in callbacks:
-                        callback.on_epoch_end(logs)
+                logs = {'learning_rate': step_size,
+                        'n_seen_batches' : n_seen_batches,
+                        'epoch' : iteration,
+                        'improvement' : improvement,
+                        'total_improvement' : total_improvement,
+                        'log_probability' : log_probability_sum,
+                        'last_log_probability' : last_log_probability_sum,
+                        'initial_log_probability' : initial_log_probability_sum,
+                        'epoch_start_time' : epoch_start_time,
+                        'epoch_end_time' : epoch_end_time,
+                        'duration' : time_spent }
+
+                for callback in callbacks:
+                    callback.on_epoch_end(logs)
 
                 iteration += 1
                 last_log_probability_sum = log_probability_sum
+
+                if iteration > max_iterations:
+                    break
 
         for callback in callbacks:
             callback.on_training_end(logs)
@@ -2946,10 +2946,10 @@ cdef class HiddenMarkovModel(GraphModel):
 
                     if self.cython == 0:
                         with gil:
-                            python_summarize(self.distributions[k], sequence, 
+                            python_summarize(self.distributions[k], sequence,
                                 weights, n)
                     else:
-                        (<Model>distributions[k])._summarize(sequence, weights, 
+                        (<Model>distributions[k])._summarize(sequence, weights,
                             n, 0, self.d)
 
             # Update the master expected transitions vector representing the sparse matrix.
@@ -3735,13 +3735,13 @@ cdef class HiddenMarkovModel(GraphModel):
         if end_state:
             end_probabilities = numpy.ones(k) / k
 
-        model = HiddenMarkovModel.from_matrix(transition_matrix, distributions, 
-            start_probabilities, state_names=state_names, name=name, 
+        model = HiddenMarkovModel.from_matrix(transition_matrix, distributions,
+            start_probabilities, state_names=state_names, name=name,
             ends=end_probabilities)
 
-        _, history = model.fit(X, weights=weights, labels=labels, 
-            stop_threshold=stop_threshold, min_iterations=min_iterations, 
-            max_iterations=max_iterations, algorithm=algorithm, 
+        _, history = model.fit(X, weights=weights, labels=labels,
+            stop_threshold=stop_threshold, min_iterations=min_iterations,
+            max_iterations=max_iterations, algorithm=algorithm,
             verbose=verbose, pseudocount=pseudocount,
             transition_pseudocount=transition_pseudocount,
             emission_pseudocount=emission_pseudocount,
